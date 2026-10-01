@@ -1,0 +1,1138 @@
+# ```react
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Sparkles, Shield, Mic, MicOff, Users, ArrowRight, CheckCircle2, 
+  Flame, Award, Radio, RefreshCw, ChevronRight, Lock, Unlock, 
+  Volume2, VolumeX, MessageSquare, BarChart3, AlertCircle, 
+  Compass, Eye, Play, FastForward, Check, Shuffle, Clock, X, Info
+} from 'lucide-react';
+
+const TOPICS = [
+  {
+    id: 'ai-governance',
+    title: 'Autonomous AI in Corporate Boardrooms',
+    category: 'Technology & Governance',
+    shortDesc: 'Should fiduciary decisions be yielded to algorithmic agents with verifiable utility functions?',
+    stances: [
+      { id: 'pro', label: 'Pro-Autonomy', desc: 'AI eliminates human bias, nepotism, and short-sighted quarterly greed.' },
+      { id: 'anti', label: 'Human Primacy', desc: 'Legal and moral agency cannot be offloaded to non-sentient neural networks.' },
+      { id: 'synth', label: 'Bicameral Synthesism', desc: 'Require dual-approval quorum: AI veto on risk, human veto on ethics.' }
+    ]
+  },
+  {
+    id: 'urban-distribution',
+    title: 'Hyper-Dense Megacities vs. Distributed Rural Hubs',
+    category: 'Urban Ecology & Economics',
+    shortDesc: 'Does human civilization advance faster through hyper-dense agglomeration or decentralized high-tech agrarian nodes?',
+    stances: [
+      { id: 'pro', label: 'Hyper-Density', desc: 'Density minimizes ecological footprint per capita and maximizes creative collision.' },
+      { id: 'anti', label: 'Decentralized Agraria', desc: 'Megacities induce cognitive fatigue and catastrophic infrastructure fragility.' },
+      { id: 'synth', label: 'Biophilic Archipelago', desc: 'Micro-clusters networked by high-speed transit with strict greenbelts.' }
+    ]
+  },
+  {
+    id: 'ubi-vs-equity',
+    title: 'Universal Basic Income vs. Direct Sovereign Asset Equity',
+    category: 'Political Economy',
+    shortDesc: 'Is cash transfer superior to distributing fractional equity in national strategic sovereign wealth reserves?',
+    stances: [
+      { id: 'pro', label: 'Direct Cash (UBI)', desc: 'Maximal individual autonomy and frictionless market liquidity.' },
+      { id: 'anti', label: 'Citizen Equity Stakes', desc: 'Cash inflates away; real asset ownership builds generational political sovereignty.' },
+      { id: 'synth', label: 'Endowed Dividends', desc: 'Non-transferable sovereign fund shares distributing monthly indexed yields.' }
+    ]
+  },
+  {
+    id: 'genetic-sovereignty',
+    title: 'Cognitive Genetic Enhancement Access',
+    category: 'Bioethics & Society',
+    shortDesc: 'Should germline cognitive enhancements be universally subsidized, market-regulated, or strictly outlawed?',
+    stances: [
+      { id: 'pro', label: 'State Subsidized', desc: 'Cognitive enhancement is a civic equalizer; prevent speciation by democratizing it.' },
+      { id: 'anti', label: 'Global Moratorium', desc: 'Altering cognitive variance compromises humanity’s collective resilience.' },
+      { id: 'synth', label: 'Therapeutic Ring-Fence', desc: 'Permit resilience & neuro-preservation, forbid speculative augmentation.' }
+    ]
+  }
+];
+
+const OPPONENTS = [
+  {
+    name: 'Elena Rostova',
+    handle: '@elena_rostova',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    location: 'Zurich, Switzerland',
+    elo: '1,840 pts',
+    badge: 'Senior Fellow',
+    rebuttalStyle: 'Socratic & Analytical'
+  },
+  {
+    name: 'Tariq Al-Mansoor',
+    handle: '@tariq_am',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    location: 'Singapore',
+    elo: '1,920 pts',
+    badge: 'Master Synthesizer',
+    rebuttalStyle: 'Empirical & Counter-factual'
+  },
+  {
+    name: 'Dr. Marcus Vance',
+    handle: '@m_vance',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
+    location: 'Cambridge, MA',
+    elo: '2,110 pts',
+    badge: 'Dialectic Laureate',
+    rebuttalStyle: 'First-Principles Deconstruction'
+  }
+];
+
+/* Pre-scripted simulated dialogue cues based on active topics */
+const SIMULATED_EXCHANGES = {
+  'ai-governance': [
+    { sender: 'user', text: "If we examine fiduciary failure, 78% of catastrophic capital losses stem from executive confirmation bias. An algorithmic governance model enforces strict expected-value calculations without ego." },
+    { sender: 'opponent', text: "That assumes the utility function captures long-term externalities. Who audits the loss function when systemic resilience clashes with short-term computational optimization?" },
+    { sender: 'user', text: "Fair critique. That's why we advocate immutable verification layers rather than black-box models—the math remains transparent to all shareholders." },
+    { sender: 'opponent', text: "I concede transparent optimization helps, but moral culpability under corporate law requires an identifiable human agent who can be held liable in a court of law." }
+  ],
+  'urban-distribution': [
+    { sender: 'user', text: "Dense cities are undeniably greener per capita. Heating one 50-story residential tower uses 40% less thermal energy than heating 200 isolated single-family dwellings." },
+    { sender: 'opponent', text: "While thermal footprint is lower, hyper-dense metropolitan cores create extreme logistical supply lines vulnerable to single-point grid collapses." },
+    { sender: 'user', text: "A valid vulnerability point. If we decentralize food generation through vertical hydroponics within the city core, we decouple supply chains without suburban sprawl." },
+    { sender: 'opponent', text: "That is an elegant synthesis. Incorporating localized vertical farming addresses my core resilience objection." }
+  ],
+  'ubi-vs-equity': [
+    { sender: 'user', text: "UBI provides immediate, unencumbered liquidity to households. Asset equity takes years to compound and fails to pay rent on the first of the month." },
+    { sender: 'opponent', text: "Liquid cash transfers without sovereign equity backstop simply drive rental and staple inflation, transferring public funds straight into real estate cartels." },
+    { sender: 'user', text: "I acknowledge the landlord-capture risk. Perhaps the cash benefit must be paired with anti-monopoly shelter protections." },
+    { sender: 'opponent', text: "Now we are converging on common ground: financial liquidity paired with structural defense against rentier extraction." }
+  ],
+  'genetic-sovereignty': [
+    { sender: 'user', text: "If cognitive enhancement is commercialized, the wealthy will permanently bifurcate human ability. Universal state provision is the only guarantee of egalitarian access." },
+    { sender: 'opponent', text: "Universal provision gives the centralized state the mandate to define what 'optimal cognitive traits' are, which invites subtle ideological conditioning." },
+    { sender: 'user', text: "A chilling and pertinent risk. The standards would need decentralized scientific governance entirely isolated from executive partisan control." },
+    { sender: 'opponent', text: "I appreciate you addressing that risk directly rather than dismissing state abuse as theoretical." }
+  ]
+};
+
+export default function App() {
+  // Navigation: 'topics' | 'matchmaking' | 'debate' | 'results' | 'salon'
+  const [view, setView] = useState('topics');
+  const [selectedTopic, setSelectedTopic] = useState(TOPICS[0]);
+  const [selectedStance, setSelectedStance] = useState(null);
+  
+  // Matchmaking State
+  const [matchState, setMatchState] = useState({
+    stage: 'searching', // 'searching' | 'analyzing' | 'found'
+    progress: 15,
+    opponent: null
+  });
+
+  // Debate Arena State
+  const [secondsRemaining, setSecondsRemaining] = useState(420); // 7 minutes = 420s
+  const [perspectiveScore, setPerspectiveScore] = useState(140);
+  const [floorOwner, setFloorOwner] = useState('user'); // 'user' | 'opponent' | 'open'
+  const [isMicMuted, setIsMicMuted] = useState(false);
+  const [isSimAudioPlaying, setIsSimAudioPlaying] = useState(true);
+  const [transcript, setTranscript] = useState([]);
+  const [activeBadges, setActiveBadges] = useState([]);
+  const [inputSpeechText, setInputSpeechText] = useState('');
+  const [argusStatus, setArgusStatus] = useState('Active Calibration');
+  
+  // Real-time animation pulses
+  const [waveAmplitudes, setWaveAmplitudes] = useState([20, 45, 75, 30, 90, 60, 40, 70, 85, 30]);
+
+  // Salon unlock status
+  const [salonUnlocked, setSalonUnlocked] = useState(false);
+  const [finalScoreData, setFinalScoreData] = useState(null);
+
+  useEffect(() => {
+    if (view !== 'debate' || !isSimAudioPlaying) return;
+    const interval = setInterval(() => {
+      setWaveAmplitudes(prev => 
+        prev.map(() => Math.floor(Math.random() * (floorOwner === 'user' ? 85 : 40) + 15))
+      );
+    }, 180);
+    return () => clearInterval(interval);
+  }, [view, isSimAudioPlaying, floorOwner]);
+
+  useEffect(() => {
+    if (view !== 'debate') return;
+    
+    const timer = setInterval(() => {
+      setSecondsRemaining(prev => {
+        if (prev <= 1) {
+          handleEndDebate();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [view]);
+
+  const startMatchmaking = (topic, stance) => {
+    setSelectedTopic(topic);
+    setSelectedStance(stance);
+    setView('matchmaking');
+    setMatchState({ stage: 'searching', progress: 15, opponent: null });
+
+    setTimeout(() => {
+      setMatchState(prev => ({ ...prev, stage: 'analyzing', progress: 55 }));
+    }, 1400);
+
+    setTimeout(() => {
+      const chosenOpponent = OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)];
+      setMatchState({
+        stage: 'found',
+        progress: 100,
+        opponent: chosenOpponent
+      });
+    }, 2800);
+  };
+
+  const enterArena = () => {
+    setSecondsRemaining(420);
+    setPerspectiveScore(160);
+    setFloorOwner('user');
+    const initialExchanges = SIMULATED_EXCHANGES[selectedTopic.id] || SIMULATED_EXCHANGES['ai-governance'];
+    setTranscript([initialExchanges[0]]);
+    setActiveBadges([
+      { id: 1, title: 'Steel-Manning Initiated', pts: '+25', type: 'gold', desc: 'Acknowledged opposing foundation.' }
+    ]);
+    setView('debate');
+  };
+
+  const toggleFloor = () => {
+    if (floorOwner === 'user') {
+      setFloorOwner('opponent');
+      // Trigger opponent simulated answer after delay
+      setTimeout(() => {
+        const pool = SIMULATED_EXCHANGES[selectedTopic.id] || SIMULATED_EXCHANGES['ai-governance'];
+        const opponentSpeech = pool[Math.floor(Math.random() * pool.length)];
+        
+        setTranscript(prev => [...prev, {
+          sender: 'opponent',
+          text: opponentSpeech.text
+        }]);
+
+        // Argus AI awards perspective for thoughtful discourse
+        addAiBadge('Intellectual Empathy', 30, 'Opponent stance integrated into rebuttal cleanly.');
+        setPerspectiveScore(s => s + 30);
+      }, 1600);
+    } else {
+      setFloorOwner('user');
+    }
+  };
+
+  const addAiBadge = (title, pts, desc) => {
+    const newBadge = {
+      id: Date.now(),
+      title,
+      pts: `+${pts}`,
+      type: pts >= 25 ? 'gold' : 'blue',
+      desc
+    };
+    setActiveBadges(prev => [newBadge, ...prev.slice(0, 3)]);
+    setArgusStatus(`Argus AI: Verified ${title}`);
+    setTimeout(() => {
+      setArgusStatus('Active Calibration');
+    }, 3000);
+  };
+
+  const handleSendSpeech = (e) => {
+    e?.preventDefault();
+    if (!inputSpeechText.trim()) return;
+
+    setTranscript(prev => [...prev, { sender: 'user', text: inputSpeechText }]);
+    setInputSpeechText('');
+    
+    // Simulate AI moderator rewards
+    const rewards = [
+      { name: 'Fallacy Avoidance', pts: 20, desc: 'Zero ad-hominem detected in assertion.' },
+      { name: 'Cognitive Reciprocity', pts: 35, desc: 'Addressed core counter-variable with nuance.' },
+      { name: 'Tone Calibration', pts: 15, desc: 'De-escalated dialectic friction.' }
+    ];
+    const picked = rewards[Math.floor(Math.random() * rewards.length)];
+    setPerspectiveScore(s => s + picked.pts);
+    addAiBadge(picked.name, picked.pts, picked.desc);
+
+    // Pass turn to opponent automatically after brief moment
+    setTimeout(() => {
+      setFloorOwner('opponent');
+      setTimeout(() => {
+        const pool = SIMULATED_EXCHANGES[selectedTopic.id] || SIMULATED_EXCHANGES['ai-governance'];
+        const oppReply = pool[1] || pool[0];
+        setTranscript(t => [...t, { sender: 'opponent', text: oppReply.text }]);
+        addAiBadge('Dialectic Equilibrium', 25, 'Constructive synthesis reached on premise.');
+        setPerspectiveScore(s => s + 25);
+        setFloorOwner('user');
+      }, 2000);
+    }, 1200);
+  };
+
+  const handleEndDebate = () => {
+    const finalScore = perspectiveScore + 85;
+    const isUnlocked = finalScore >= 200;
+    setFinalScoreData({
+      score: finalScore,
+      empathyRating: '96.4%',
+      fallacyRate: '0.0%',
+      steelmanningRatio: '88%',
+      unlocked: isUnlocked
+    });
+    if (isUnlocked) setSalonUnlocked(true);
+    setView('results');
+  };
+
+  // Helper formatting for seconds to mm:ss
+  const formatTime = (secs) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div className="w-full min-h-screen bg-neutral-950 text-neutral-100 flex justify-center items-start font-sans antialiased selection:bg-amber-500 selection:text-neutral-900">
+      {/* Mobile Device Frame wrapper for native tactile feeling on desktop & mobile */}
+      <main className="w-full max-w-md min-h-screen bg-neutral-900/90 border-x border-neutral-800 flex flex-col relative shadow-2xl overflow-hidden pb-6">
+        
+        {/* Top Floating App Bar */}
+        <header className="px-4 py-3 bg-neutral-900/80 backdrop-blur-md border-b border-neutral-800 flex items-center justify-between sticky top-0 z-30">
+          <div className="flex items-center space-x-2.5">
+            <div className="h-7 w-7 rounded-lg bg-gradient-to-tr from-amber-600 to-indigo-600 flex items-center justify-center shadow-md shadow-amber-500/20">
+              <Compass className="h-4 w-4 text-white animate-spin-slow" />
+            </div>
+            <div>
+              <h1 className="text-xs font-bold tracking-wider uppercase text-neutral-200">Echo Chamber</h1>
+              <p className="text-[10px] text-amber-400 font-mono tracking-tight">Debate Roulette • Dialectic Network</p>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <button 
+              onClick={() => setView('salon')}
+              className={`text-[11px] px-2.5 py-1 rounded-full border flex items-center space-x-1.5 transition-all ${
+                salonUnlocked 
+                  ? 'bg-amber-500/10 border-amber-500/40 text-amber-300 hover:bg-amber-500/20' 
+                  : 'bg-neutral-800/80 border-neutral-700/60 text-neutral-400 hover:text-neutral-200'
+              }`}
+            >
+              {salonUnlocked ? <Unlock className="h-3 w-3 text-amber-400" /> : <Lock className="h-3 w-3" />}
+              <span className="font-medium">The Salon</span>
+            </button>
+          </div>
+        </header>
+
+        {/* View Switch Dispatch */}
+        {view === 'topics' && (
+          <TopicSelectionView 
+            topics={TOPICS} 
+            selectedTopic={selectedTopic} 
+            setSelectedTopic={setSelectedTopic}
+            selectedStance={selectedStance}
+            setSelectedStance={setSelectedStance}
+            onStartQueue={startMatchmaking}
+          />
+        )}
+
+        {view === 'matchmaking' && (
+          <MatchmakingView 
+            topic={selectedTopic} 
+            stance={selectedStance}
+            matchState={matchState}
+            onCancel={() => setView('topics')}
+            onEnterArena={enterArena}
+          />
+        )}
+
+        {view === 'debate' && (
+          <DebateArenaView 
+            topic={selectedTopic}
+            opponent={matchState.opponent || OPPONENTS[0]}
+            timeRemaining={secondsRemaining}
+            formatTime={formatTime}
+            perspectiveScore={perspectiveScore}
+            floorOwner={floorOwner}
+            toggleFloor={toggleFloor}
+            isMicMuted={isMicMuted}
+            setIsMicMuted={setIsMicMuted}
+            isSimAudioPlaying={isSimAudioPlaying}
+            setIsSimAudioPlaying={setIsSimAudioPlaying}
+            waveAmplitudes={waveAmplitudes}
+            transcript={transcript}
+            activeBadges={activeBadges}
+            argusStatus={argusStatus}
+            inputSpeechText={inputSpeechText}
+            setInputSpeechText={setInputSpeechText}
+            handleSendSpeech={handleSendSpeech}
+            onEndDebate={handleEndDebate}
+          />
+        )}
+
+        {view === 'results' && finalScoreData && (
+          <DebateResultsView 
+            scoreData={finalScoreData}
+            topic={selectedTopic}
+            opponent={matchState.opponent || OPPONENTS[0]}
+            onEnterSalon={() => setView('salon')}
+            onNewDebate={() => {
+              setSelectedStance(null);
+              setView('topics');
+            }}
+          />
+        )}
+
+        {view === 'salon' && (
+          <GrandSalonView 
+            isUnlocked={salonUnlocked} 
+            onReturn={() => setView('topics')}
+          />
+        )}
+
+      </main>
+    </div>
+  );
+}
+
+function TopicSelectionView({ topics, selectedTopic, setSelectedTopic, selectedStance, setSelectedStance, onStartQueue }) {
+  return (
+    <div className="flex-1 flex flex-col px-4 pt-4 pb-2 space-y-4 animate-fadeIn">
+      {/* Editorial Intro Banner */}
+      <div className="bg-gradient-to-br from-neutral-900 via-neutral-800/60 to-neutral-900 border border-neutral-800 rounded-2xl p-4 relative overflow-hidden shadow-inner">
+        <div className="absolute -top-12 -right-12 w-28 h-28 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+        <span className="text-[10px] font-mono tracking-widest text-amber-400 uppercase font-semibold">Dialectic Matching Matrix</span>
+        <h2 className="text-lg font-bold text-neutral-100 tracking-tight mt-0.5">Shatter Your Echo Chamber</h2>
+        <p className="text-xs text-neutral-400 mt-1 leading-relaxed">
+          Select an intellectual crucible. You will be matched instantly with an opponent holding polar opposite convictions.
+        </p>
+      </div>
+
+      {/* Topics Carousel / List */}
+      <div className="space-y-3 flex-1 overflow-y-auto pr-0.5">
+        <div className="flex items-center justify-between text-xs font-semibold text-neutral-400 uppercase tracking-wider px-1">
+          <span>Active Inquiries</span>
+          <span className="text-[10px] text-neutral-500">4 Active</span>
+        </div>
+
+        {topics.map((t) => {
+          const isSelected = selectedTopic.id === t.id;
+          return (
+            <div 
+              key={t.id}
+              onClick={() => {
+                setSelectedTopic(t);
+                setSelectedStance(null);
+              }}
+              className={`p-3.5 rounded-xl border transition-all cursor-pointer ${
+                isSelected 
+                  ? 'bg-neutral-800/90 border-amber-500/60 ring-1 ring-amber-500/30 shadow-lg' 
+                  : 'bg-neutral-900/50 border-neutral-800/80 hover:bg-neutral-850 hover:border-neutral-700'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono font-medium text-amber-400/90 uppercase tracking-wide">
+                  {t.category}
+                </span>
+                {isSelected && (
+                  <span className="flex h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+                )}
+              </div>
+              <h3 className="text-sm font-semibold text-neutral-100 mt-1">{t.title}</h3>
+              <p className="text-xs text-neutral-400 mt-1.5 leading-relaxed">{t.shortDesc}</p>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Stance Picker for the active topic */}
+      <div className="bg-neutral-900/95 border border-neutral-800 rounded-2xl p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-semibold tracking-wide text-neutral-300">Choose Your Conviction</label>
+          <span className="text-[10px] text-neutral-500 font-mono">Opposite will be queued</span>
+        </div>
+
+        <div className="grid grid-cols-1 gap-2">
+          {selectedTopic.stances.map((st) => {
+            const isStanceActive = selectedStance?.id === st.id;
+            return (
+              <button
+                key={st.id}
+                type="button"
+                onClick={() => setSelectedStance(st)}
+                className={`w-full p-2.5 text-left rounded-xl border text-xs transition-all flex items-start space-x-2.5 ${
+                  isStanceActive 
+                    ? 'bg-amber-500/10 border-amber-500/60 text-neutral-100 ring-1 ring-amber-500/20' 
+                    : 'bg-neutral-800/50 border-neutral-800 text-neutral-300 hover:bg-neutral-800'
+                }`}
+              >
+                <div className={`mt-0.5 h-3.5 w-3.5 rounded-full border flex items-center justify-center shrink-0 ${
+                  isStanceActive ? 'border-amber-400 bg-amber-400' : 'border-neutral-600'
+                }`}>
+                  {isStanceActive && <div className="h-1.5 w-1.5 rounded-full bg-neutral-950" />}
+                </div>
+                <div>
+                  <div className="font-semibold text-neutral-200">{st.label}</div>
+                  <div className="text-[11px] text-neutral-400 mt-0.5 leading-snug">{st.desc}</div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Enter Roulette Button */}
+        <button
+          disabled={!selectedStance}
+          onClick={() => onStartQueue(selectedTopic, selectedStance)}
+          className={`w-full mt-2 py-3 rounded-xl font-medium text-xs flex items-center justify-center space-x-2 transition-all shadow-lg ${
+            selectedStance 
+              ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-neutral-950 font-bold shadow-amber-500/20 active:scale-[0.99]' 
+              : 'bg-neutral-800 text-neutral-500 cursor-not-allowed border border-neutral-800'
+          }`}
+        >
+          <Shuffle className="h-3.5 w-3.5" />
+          <span>Queue Dialectic Opponent</span>
+          <ArrowRight className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function MatchmakingView({ topic, stance, matchState, onCancel, onEnterArena }) {
+  return (
+    <div className="flex-1 flex flex-col justify-between p-6 animate-fadeIn">
+      {/* Header status */}
+      <div className="flex items-center justify-between">
+        <button 
+          onClick={onCancel}
+          className="text-xs text-neutral-400 hover:text-neutral-200 flex items-center space-x-1"
+        >
+          <X className="h-3.5 w-3.5" />
+          <span>Abort Queue</span>
+        </button>
+        <span className="text-[11px] font-mono text-amber-400 animate-pulse">
+          {matchState.stage === 'found' ? 'OPPONENT SYNCHRONIZED' : 'HEURISTIC SCANNING'}
+        </span>
+      </div>
+
+      {/* Main Radar / Match Display */}
+      <div className="flex flex-col items-center justify-center my-auto space-y-6">
+        {matchState.stage !== 'found' ? (
+          <div className="relative flex items-center justify-center">
+            {/* Concentric radar rings */}
+            <div className="w-56 h-56 rounded-full border border-neutral-800/80 animate-ping absolute opacity-20" />
+            <div className="w-44 h-44 rounded-full border border-amber-500/20 animate-pulse absolute" />
+            <div className="w-32 h-32 rounded-full border border-neutral-700/60 flex items-center justify-center bg-neutral-900/80 shadow-2xl">
+              <Compass className="h-10 w-10 text-amber-400 animate-spin" style={{ animationDuration: '4s' }} />
+            </div>
+          </div>
+        ) : (
+          /* Opponent Card Revealed */
+          <div className="w-full bg-neutral-900/90 border border-amber-500/40 rounded-2xl p-5 shadow-2xl relative overflow-hidden animate-scaleUp">
+            <div className="absolute top-0 right-0 bg-amber-500 text-neutral-950 font-bold text-[9px] px-2 py-0.5 rounded-bl font-mono">
+              POLAR COUNTERPART
+            </div>
+
+            <div className="flex items-center space-x-3.5">
+              <img 
+                src={matchState.opponent.avatar} 
+                alt={matchState.opponent.name}
+                className="w-14 h-14 rounded-full object-cover border-2 border-amber-500 shadow" 
+              />
+              <div>
+                <h4 className="font-bold text-neutral-100 text-sm">{matchState.opponent.name}</h4>
+                <div className="text-xs text-neutral-400">{matchState.opponent.location}</div>
+                <div className="flex items-center space-x-2 mt-1">
+                  <span className="text-[10px] font-mono bg-neutral-800 px-1.5 py-0.5 rounded text-amber-300">
+                    {matchState.opponent.elo}
+                  </span>
+                  <span className="text-[10px] font-mono text-neutral-400">
+                    {matchState.opponent.badge}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-neutral-800/80 text-xs text-neutral-300 space-y-1">
+              <div className="flex justify-between text-[11px]">
+                <span className="text-neutral-500">Debate Style:</span>
+                <span className="text-neutral-200 font-medium">{matchState.opponent.rebuttalStyle}</span>
+              </div>
+              <div className="flex justify-between text-[11px]">
+                <span className="text-neutral-500">Assigned Stance:</span>
+                <span className="text-rose-400 font-semibold">Strict Antithesis</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Informational Text */}
+        <div className="text-center max-w-xs space-y-1.5">
+          <h3 className="text-sm font-semibold text-neutral-200">
+            {matchState.stage === 'searching' && "Filtering echo-chambers worldwide..."}
+            {matchState.stage === 'analyzing' && "Calibrating perspective differential..."}
+            {matchState.stage === 'found' && "Antithetical Peer Identified"}
+          </h3>
+          <p className="text-xs text-neutral-500">
+            {matchState.stage === 'found' 
+              ? "Argus AI moderator active. 7-minute clock initiates upon room entry."
+              : `Locating an interlocutor with diametrically opposed reasoning on "${topic.title}".`}
+          </p>
+        </div>
+      </div>
+
+      {/* Action Footer */}
+      <div className="space-y-2">
+        {matchState.stage === 'found' ? (
+          <button
+            onClick={onEnterArena}
+            className="w-full py-3.5 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-neutral-950 font-bold text-xs rounded-xl shadow-lg shadow-amber-500/25 flex items-center justify-center space-x-2 hover:brightness-110 active:scale-[0.99] transition-all"
+          >
+            <Play className="h-4 w-4 fill-current" />
+            <span>Enter Dialectic Arena (7:00)</span>
+          </button>
+        ) : (
+          <div className="w-full bg-neutral-800/80 h-1.5 rounded-full overflow-hidden">
+            <div 
+              className="bg-amber-400 h-full transition-all duration-500" 
+              style={{ width: `${matchState.progress}%` }} 
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DebateArenaView({
+  topic,
+  opponent,
+  timeRemaining,
+  formatTime,
+  perspectiveScore,
+  floorOwner,
+  toggleFloor,
+  isMicMuted,
+  setIsMicMuted,
+  isSimAudioPlaying,
+  setIsSimAudioPlaying,
+  waveAmplitudes,
+  transcript,
+  activeBadges,
+  argusStatus,
+  inputSpeechText,
+  setInputSpeechText,
+  handleSendSpeech,
+  onEndDebate
+}) {
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [transcript]);
+
+  // Determine urgency color for timer
+  const isUrgent = timeRemaining < 90;
+
+  return (
+    <div className="flex-1 flex flex-col justify-between overflow-hidden animate-fadeIn">
+      {/* Arena Sub-Header: Timer, Topic Tag & Perspective Gauge */}
+      <div className="p-3 bg-neutral-900 border-b border-neutral-800 space-y-2">
+        <div className="flex items-center justify-between">
+          {/* 7-Minute Timer */}
+          <div className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full font-mono text-xs font-bold border transition-colors ${
+            isUrgent 
+              ? 'bg-rose-500/10 border-rose-500/50 text-rose-400 animate-pulse' 
+              : 'bg-neutral-800 border-neutral-700 text-neutral-200'
+          }`}>
+            <Clock className="h-3 w-3" />
+            <span>{formatTime(timeRemaining)}</span>
+          </div>
+
+          {/* Perspective Score Meter */}
+          <div className="flex items-center space-x-1.5 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-full">
+            <Flame className="h-3.5 w-3.5 text-amber-400" />
+            <span className="text-xs font-mono font-bold text-amber-300">
+              {perspectiveScore} <span className="text-[10px] font-normal text-amber-400/70">PTS</span>
+            </span>
+          </div>
+
+          {/* Manual End Action */}
+          <button 
+            onClick={onEndDebate}
+            className="text-[11px] text-neutral-400 hover:text-rose-400 px-2 py-1 rounded border border-neutral-800 hover:border-rose-900/50 transition-colors"
+          >
+            Conclude
+          </button>
+        </div>
+
+        {/* Current Debate Subject Breadcrumb */}
+        <div className="text-[11px] text-neutral-400 truncate flex items-center space-x-1">
+          <span className="text-amber-500 font-semibold">Arena Topic:</span>
+          <span className="text-neutral-200 truncate">{topic.title}</span>
+        </div>
+      </div>
+
+      {/* Synchronous Split Screen (User vs Opponent Faceoff) */}
+      <div className="grid grid-cols-2 gap-2 p-3 bg-neutral-950/60 border-b border-neutral-800">
+        
+        {/* User Card */}
+        <div className={`p-3 rounded-xl border relative transition-all ${
+          floorOwner === 'user' 
+            ? 'bg-neutral-850 border-amber-500/60 ring-1 ring-amber-500/30' 
+            : 'bg-neutral-900/40 border-neutral-800/80 opacity-70'
+        }`}>
+          <div className="flex items-center space-x-2">
+            <div className="relative">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-600 to-indigo-600 flex items-center justify-center text-xs font-bold text-white">
+                YOU
+              </div>
+              {floorOwner === 'user' && (
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-neutral-900" />
+              )}
+            </div>
+            <div className="overflow-hidden">
+              <div className="text-xs font-bold text-neutral-200 truncate">Your Perspective</div>
+              <div className="text-[10px] font-mono text-amber-400/90 truncate">Thesis Floor</div>
+            </div>
+          </div>
+
+          {/* Dynamic Audio Waveform Indicator */}
+          <div className="h-5 flex items-center space-x-1 mt-2.5 px-1 bg-neutral-900/90 rounded border border-neutral-800/60">
+            {waveAmplitudes.slice(0, 8).map((height, i) => (
+              <div
+                key={i}
+                className={`w-1 rounded-full transition-all duration-150 ${
+                  floorOwner === 'user' && !isMicMuted ? 'bg-amber-400' : 'bg-neutral-700 h-1.5'
+                }`}
+                style={{ height: floorOwner === 'user' && !isMicMuted ? `${height}%` : '4px' }}
+              />
+            ))}
+          </div>
+
+          <div className="mt-1.5 flex justify-between items-center text-[10px] text-neutral-400">
+            <span>{floorOwner === 'user' ? 'Speaking...' : 'Muted'}</span>
+            <button 
+              onClick={() => setIsMicMuted(!isMicMuted)} 
+              className="hover:text-neutral-200"
+            >
+              {isMicMuted ? <MicOff className="h-3 w-3 text-rose-400" /> : <Mic className="h-3 w-3 text-emerald-400" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Opponent Card */}
+        <div className={`p-3 rounded-xl border relative transition-all ${
+          floorOwner === 'opponent' 
+            ? 'bg-neutral-850 border-indigo-500/60 ring-1 ring-indigo-500/30' 
+            : 'bg-neutral-900/40 border-neutral-800/80 opacity-70'
+        }`}>
+          <div className="flex items-center space-x-2">
+            <div className="relative">
+              <img 
+                src={opponent.avatar} 
+                alt={opponent.name}
+                className="w-8 h-8 rounded-full object-cover border border-neutral-700" 
+              />
+              {floorOwner === 'opponent' && (
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-indigo-500 rounded-full border-2 border-neutral-900" />
+              )}
+            </div>
+            <div className="overflow-hidden">
+              <div className="text-xs font-bold text-neutral-200 truncate">{opponent.name}</div>
+              <div className="text-[10px] font-mono text-indigo-400/90 truncate">Antithesis</div>
+            </div>
+          </div>
+
+          {/* Opponent Audio Waveform */}
+          <div className="h-5 flex items-center space-x-1 mt-2.5 px-1 bg-neutral-900/90 rounded border border-neutral-800/60">
+            {waveAmplitudes.slice(2, 10).map((height, i) => (
+              <div
+                key={i}
+                className={`w-1 rounded-full transition-all duration-150 ${
+                  floorOwner === 'opponent' ? 'bg-indigo-400' : 'bg-neutral-700 h-1.5'
+                }`}
+                style={{ height: floorOwner === 'opponent' ? `${height}%` : '4px' }}
+              />
+            ))}
+          </div>
+
+          <div className="mt-1.5 flex justify-between items-center text-[10px] text-neutral-400">
+            <span>{floorOwner === 'opponent' ? 'Interlocuting...' : 'Listening'}</span>
+            <button 
+              onClick={() => setIsSimAudioPlaying(!isSimAudioPlaying)}
+              className="hover:text-neutral-200"
+            >
+              {isSimAudioPlaying ? <Volume2 className="h-3 w-3 text-indigo-400" /> : <VolumeX className="h-3 w-3 text-neutral-500" />}
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      {/* AI Moderator ('Argus AI') Live Badge Ticker */}
+      <div className="bg-neutral-900/95 border-b border-neutral-800 px-3 py-1.5 flex items-center justify-between">
+        <div className="flex items-center space-x-1.5 text-[10px] text-neutral-400">
+          <Shield className="h-3 w-3 text-amber-400" />
+          <span className="font-semibold text-neutral-300">Argus AI:</span>
+          <span className="text-amber-400 font-mono truncate">{argusStatus}</span>
+        </div>
+        <div className="flex items-center space-x-1">
+          {activeBadges.map(b => (
+            <span 
+              key={b.id} 
+              className="text-[9px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-mono font-semibold"
+            >
+              {b.pts} {b.title}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Real-time Dialogue / Transcript Feed */}
+      <div 
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto p-3 space-y-3 bg-neutral-950/40"
+      >
+        {transcript.map((item, idx) => {
+          const isMe = item.sender === 'user';
+          return (
+            <div 
+              key={idx} 
+              className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-1 animate-slideUp`}
+            >
+              <span className="text-[10px] font-mono text-neutral-500">
+                {isMe ? 'You' : opponent.name}
+              </span>
+              <div className={`p-3 rounded-2xl max-w-[85%] text-xs leading-relaxed ${
+                isMe 
+                  ? 'bg-amber-500/15 border border-amber-500/30 text-neutral-100 rounded-tr-none' 
+                  : 'bg-neutral-800/80 border border-neutral-700/70 text-neutral-200 rounded-tl-none'
+              }`}>
+                {item.text}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Debate Interaction & Floor Control Bar */}
+      <div className="p-3 bg-neutral-900 border-t border-neutral-800 space-y-2">
+        <div className="flex items-center justify-between">
+          {/* Turn-Taking Toggle */}
+          <button
+            onClick={toggleFloor}
+            className={`text-xs px-3 py-1.5 rounded-lg border font-medium flex items-center space-x-1.5 transition-all ${
+              floorOwner === 'user'
+                ? 'bg-amber-500 text-neutral-950 font-bold border-amber-400 shadow-md shadow-amber-500/20'
+                : 'bg-neutral-800 border-neutral-700 text-neutral-300 hover:text-white'
+            }`}
+          >
+            <RefreshCw className="h-3 w-3" />
+            <span>{floorOwner === 'user' ? 'Yield Floor to Opponent' : 'Request The Floor'}</span>
+          </button>
+
+          <span className="text-[10px] font-mono text-neutral-400">
+            {floorOwner === 'user' ? 'Your Microphone Live' : 'Opponent Has Floor'}
+          </span>
+        </div>
+
+        {/* Input Rebuttal / Synthetic Voice Box */}
+        <form onSubmit={handleSendSpeech} className="flex items-center space-x-2">
+          <input
+            type="text"
+            value={inputSpeechText}
+            onChange={(e) => setInputSpeechText(e.target.value)}
+            placeholder={floorOwner === 'user' ? "Speak your premise or counter-argument..." : "Wait for opponent to yield floor..."}
+            className="flex-1 bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-neutral-200 placeholder-neutral-500 focus:outline-none focus:border-amber-500/70"
+          />
+          <button
+            type="submit"
+            disabled={!inputSpeechText.trim()}
+            className="px-3.5 py-2 bg-neutral-800 disabled:opacity-40 hover:bg-amber-500 hover:text-neutral-950 text-neutral-200 rounded-xl text-xs font-semibold border border-neutral-700 transition-all flex items-center justify-center shrink-0"
+          >
+            Transmit
+          </button>
+        </form>
+      </div>
+
+    </div>
+  );
+}
+
+function DebateResultsView({ scoreData, topic, opponent, onEnterSalon, onNewDebate }) {
+  return (
+    <div className="flex-1 flex flex-col justify-between p-5 space-y-4 animate-fadeIn">
+      <div className="text-center space-y-1 mt-2">
+        <div className="inline-flex p-2.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 mb-1">
+          <Award className="h-7 w-7" />
+        </div>
+        <h2 className="text-lg font-bold text-neutral-100">Debate Adjudication Complete</h2>
+        <p className="text-xs text-neutral-400">Argus AI dialectic performance telemetry</p>
+      </div>
+
+      {/* Main Scorecard Card */}
+      <div className="bg-neutral-900/90 border border-neutral-800 rounded-2xl p-5 space-y-4 shadow-xl">
+        <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
+          <div>
+            <div className="text-[10px] font-mono uppercase text-neutral-500 tracking-wider">Dialectic Perspective Score</div>
+            <div className="text-3xl font-extrabold text-amber-400 font-mono tracking-tight">
+              {scoreData.score} <span className="text-xs font-normal text-neutral-400">pts</span>
+            </div>
+          </div>
+          <div className="text-right">
+            <span className="text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded">
+              PASSED BENCHMARK
+            </span>
+          </div>
+        </div>
+
+        {/* Detailed Metrics */}
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="bg-neutral-950/60 p-2.5 rounded-xl border border-neutral-850">
+            <div className="text-[10px] text-neutral-500">Empathy</div>
+            <div className="text-sm font-bold text-neutral-200 mt-0.5">{scoreData.empathyRating}</div>
+          </div>
+          <div className="bg-neutral-950/60 p-2.5 rounded-xl border border-neutral-850">
+            <div className="text-[10px] text-neutral-500">Fallacy Rate</div>
+            <div className="text-sm font-bold text-emerald-400 mt-0.5">{scoreData.fallacyRate}</div>
+          </div>
+          <div className="bg-neutral-950/60 p-2.5 rounded-xl border border-neutral-850">
+            <div className="text-[10px] text-neutral-500">Steel-Manning</div>
+            <div className="text-sm font-bold text-amber-400 mt-0.5">{scoreData.steelmanningRatio}</div>
+          </div>
+        </div>
+
+        {/* AI Moderator Summary Critique */}
+        <div className="bg-neutral-950/80 rounded-xl p-3 border border-neutral-800/80 space-y-1">
+          <div className="text-[11px] font-semibold text-neutral-300 flex items-center space-x-1.5">
+            <Sparkles className="h-3 w-3 text-amber-400" />
+            <span>Argus Synthesis Note</span>
+          </div>
+          <p className="text-xs text-neutral-400 leading-relaxed">
+            "Both participants refrained from ad-hominem assertions. User successfully articulated opponent's core principle before presenting their counter-structural model."
+          </p>
+        </div>
+      </div>
+
+      {/* Grand Salon Access Banner */}
+      <div className="bg-gradient-to-br from-amber-500/20 via-neutral-900 to-indigo-950/40 border border-amber-500/40 rounded-2xl p-4 space-y-2">
+        <div className="flex items-center space-x-2 text-amber-300 font-semibold text-xs">
+          <Unlock className="h-4 w-4 text-amber-400" />
+          <span>The Grand Salon Access Unlocked</span>
+        </div>
+        <p className="text-[11px] text-neutral-300 leading-relaxed">
+          Your composite perspective score exceeded the 200 threshold. You have earned a seat in this week’s exclusive Chatham House style salon symposiums.
+        </p>
+        <button
+          onClick={onEnterSalon}
+          className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold rounded-xl text-xs flex items-center justify-center space-x-1.5 transition-all shadow-md shadow-amber-500/20"
+        >
+          <span>Enter The Grand Salon</span>
+          <ChevronRight className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      {/* Bottom Action */}
+      <button
+        onClick={onNewDebate}
+        className="w-full py-3 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-semibold rounded-xl border border-neutral-700 transition-all"
+      >
+        Spin Roulette for Another Topic
+      </button>
+    </div>
+  );
+}
+
+function GrandSalonView({ isUnlocked, onReturn }) {
+  const SALON_ROOMS = [
+    {
+      title: "Epistemic Humility in the Age of Synthetic Agents",
+      hosts: ["Dr. Aris Thorne", "Nadia Chen"],
+      participants: 14,
+      status: "Live Audio Salon",
+      chathamHouseRule: true
+    },
+    {
+      title: "Post-Labor Macroeconomics & Sovereign Energy Vaults",
+      hosts: ["Marcian V.", "Elena Rostova"],
+      participants: 9,
+      status: "Live Audio Salon",
+      chathamHouseRule: true
+    }
+  ];
+
+  return (
+    <div className="flex-1 flex flex-col justify-between p-5 space-y-4 animate-fadeIn">
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <button 
+            onClick={onReturn}
+            className="text-xs text-neutral-400 hover:text-neutral-200 flex items-center space-x-1"
+          >
+            <ChevronRight className="h-4 w-4 rotate-180" />
+            <span>Back to Matrix</span>
+          </button>
+          <span className="text-[10px] font-mono text-amber-400 px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30">
+            PRIVATE SALON
+          </span>
+        </div>
+
+        <div className="space-y-1">
+          <h2 className="text-xl font-extrabold text-neutral-100 tracking-tight">The Grand Salon</h2>
+          <p className="text-xs text-neutral-400 leading-relaxed">
+            Reserved exclusively for interlocutors with verified perspective scores. Uncurated, high-fidelity dialectic salons under Chatham House rules.
+          </p>
+        </div>
+
+        {/* Lockout fallback if user visits without qualifying */}
+        {!isUnlocked ? (
+          <div className="mt-8 p-6 bg-neutral-900 border border-neutral-800 rounded-2xl text-center space-y-3">
+            <Lock className="h-8 w-8 text-neutral-600 mx-auto" />
+            <h4 className="text-sm font-bold text-neutral-300">Admission Restrained</h4>
+            <p className="text-xs text-neutral-500 max-w-xs mx-auto">
+              Complete at least one 7-minute debate with a Perspective Score of 200 or higher to unlock credentials.
+            </p>
+            <button
+              onClick={onReturn}
+              className="mt-2 px-4 py-2 bg-amber-500 text-neutral-950 font-bold text-xs rounded-xl"
+            >
+              Start Qualifying Debate
+            </button>
+          </div>
+        ) : (
+          /* Active High-Tier Rooms */
+          <div className="mt-5 space-y-3">
+            <div className="text-[11px] font-mono uppercase text-neutral-500 tracking-wider">Active Chambers</div>
+            {SALON_ROOMS.map((room, i) => (
+              <div 
+                key={i}
+                className="bg-neutral-900/90 border border-neutral-800 hover:border-amber-500/50 rounded-2xl p-4 transition-all cursor-pointer space-y-2 group"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full flex items-center space-x-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>{room.status}</span>
+                  </span>
+                  <span className="text-xs text-neutral-400 flex items-center space-x-1">
+                    <Users className="h-3 w-3" />
+                    <span>{room.participants}</span>
+                  </span>
+                </div>
+
+                <h4 className="text-sm font-semibold text-neutral-200 group-hover:text-amber-300 transition-colors">
+                  {room.title}
+                </h4>
+
+                <div className="flex items-center justify-between text-[11px] text-neutral-500 pt-1">
+                  <span>Convener: {room.hosts.join(', ')}</span>
+                  <span className="text-[10px] text-amber-500/90 font-mono">Chatham House</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="p-3 bg-neutral-900/60 border border-neutral-800 rounded-xl text-center">
+        <p className="text-[11px] text-neutral-500">
+          All audio streams in The Grand Salon are ephemeral and cryptographically deleted post-session.
+        </p>
+      </div>
+    </div>
+  );
+}
+``` workflow for building and deploying a Next.js site to GitHub Pages
+#
+# To get started with Next.js see: https://nextjs.org/docs/getting-started
+#
+name: Deploy Next.js site to Pages
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: ["main"]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Build job
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Detect package manager
+        id: detect-package-manager
+        run: |
+          if [ -f "${{ github.workspace }}/yarn.lock" ]; then
+            echo "manager=yarn" >> $GITHUB_OUTPUT
+            echo "command=install" >> $GITHUB_OUTPUT
+            echo "runner=yarn" >> $GITHUB_OUTPUT
+            exit 0
+          elif [ -f "${{ github.workspace }}/package.json" ]; then
+            echo "manager=npm" >> $GITHUB_OUTPUT
+            echo "command=ci" >> $GITHUB_OUTPUT
+            echo "runner=npx --no-install" >> $GITHUB_OUTPUT
+            exit 0
+          else
+            echo "Unable to determine package manager"
+            exit 1
+          fi
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: ${{ steps.detect-package-manager.outputs.manager }}
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        with:
+          # Automatically inject basePath in your Next.js configuration file and disable
+          # server side image optimization (https://nextjs.org/docs/api-reference/next/image#unoptimized).
+          #
+          # You may remove this line if you want to manage the configuration yourself.
+          static_site_generator: next
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .next/cache
+          # Generate a new cache whenever packages or source files change.
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
+          # If source files changed but packages didn't, rebuild from a prior cache.
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-
+      - name: Install dependencies
+        run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
+      - name: Build with Next.js
+        run: ${{ steps.detect-package-manager.outputs.runner }} next build
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./out
+
+  # Deployment job
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
